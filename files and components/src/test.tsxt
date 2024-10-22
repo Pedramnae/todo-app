@@ -1,0 +1,207 @@
+import React, { useEffect } from 'react'
+import { useState, useRef } from 'react'
+import { GoTrash } from "react-icons/go";
+import { FaCheck } from "react-icons/fa6";
+
+
+let count = 0
+function Todo() {
+    const list = useRef()
+    const completedtab = useRef()
+    const [todos, setTodos] = useState([])
+    const [completedtodos, setCompletedtodos] = useState([])
+    const [inputs, setInputs] = useState({
+        title: '',
+        description: '',
+    })
+    function inputvalueset(e) {
+        let inputname = e.target.getAttribute('name')
+        switch (inputname) {
+            case 'Title': setInputs({
+                ...inputs,
+                title: e.target.value
+            }); break;
+            case 'Description': setInputs({
+                ...inputs,
+                description: e.target.value
+            }); break;
+        }
+    }
+    const addtask = () => {
+        if (inputs.title != '' && inputs.description != '') {
+            let newtodo = {
+                title: inputs.title,
+                description: inputs.description,
+            }
+            if (todos != '') {
+                todos.map((val) => {
+                    if (val.title == newtodo.title && val.description == newtodo.description) {
+                        count++
+                    }
+                })
+                if (count == 0) {
+                    let updatedtodo = [...todos]
+                    updatedtodo.push(newtodo)
+                    setTodos(updatedtodo)
+                    localStorage.setItem('todos', JSON.stringify(updatedtodo))
+                } else {
+                    alert('item exist')
+                    count = 0
+                }
+            } else {
+                let updatedtodo = [...todos]
+                updatedtodo.push(newtodo)
+                setTodos(updatedtodo)
+                localStorage.setItem('todos', JSON.stringify(updatedtodo))
+            }
+        } else {
+            alert('please fill all forms')
+        }
+    }
+    const handledelete = (e) => {
+        let index = e.currentTarget.parentElement.parentElement.getAttribute('data-index')
+        let parent = e.currentTarget.parentElement.parentElement
+        let reducetodo = [...todos]
+        reducetodo.splice(index, 1)
+        localStorage.setItem('todos', JSON.stringify(reducetodo))
+        console.log(parent);
+        setTodos(reducetodo)
+    }
+    const handlecomplete = (e) => {
+        let index = e.currentTarget.parentElement.parentElement.getAttribute('data-index')
+        let now = new Date();
+        let dd = now.getDate();
+        let mm = now.getMonth() + 1;
+        let yyyy = now.getFullYear();
+        let h = now.getHours();
+        let m = now.getMinutes();
+        let s = now.getSeconds();
+        let completedOn =
+            dd + "-" + mm + "-" + yyyy + " at " + h + ":" + m + ":" + s;
+
+        let completedtask = {
+            ...todos[index],
+            completedOn: completedOn,
+        };
+        let reducetodo = [...todos]
+        let addcompletedtodos = [...completedtodos]
+        reducetodo.splice(index, 1)
+        addcompletedtodos.push(completedtask)
+        localStorage.setItem('completedtodos', JSON.stringify(addcompletedtodos))
+        localStorage.setItem('todos', JSON.stringify(reducetodo))
+        console.log(addcompletedtodos);
+        console.log(reducetodo);
+        setCompletedtodos(addcompletedtodos)
+        setTodos(reducetodo)
+    }
+    const changetab = (e) => {
+        let tabname = e.target.getAttribute('data-tabname')
+        if (tabname == 'list') {
+            list.current.classList.add('flex')
+            list.current.classList.remove('hidden')
+            completedtab.current.classList.remove('flex')
+            completedtab.current.classList.add('hidden')
+        } else {
+            list.current.classList.remove('flex')
+            list.current.classList.add('hidden')
+            completedtab.current.classList.add('flex')
+            completedtab.current.classList.remove('hidden')
+        }
+    }
+    const handlecompleteddelete = (e) => {
+        let index = e.currentTarget.parentElement.parentElement.getAttribute('data-index')
+        let parent = e.currentTarget.parentElement.parentElement
+        let reducecompletedtodo = [...completedtodos]
+        reducecompletedtodo.splice(index, 1)
+        localStorage.setItem('completedtodos', JSON.stringify(reducecompletedtodo))
+        setCompletedtodos(reducecompletedtodo)
+    }
+    useEffect(() => {
+        let storedtodos = JSON.parse(localStorage.getItem('todos'))
+        let storedcompletedtodos = JSON.parse(localStorage.getItem('completedtodos'))
+        if (storedtodos) {
+            setTodos(storedtodos)
+        }
+        if (storedcompletedtodos) {
+            setCompletedtodos(storedcompletedtodos)
+        }
+
+    }, [])
+    return (
+        <>
+            <section className='w-full min-h-[100vh] flex items-center justify-center bg-[#1e1e1e]'>
+                <div className='w-[1000px] h-fit bg-[#343434] '>
+                    <div className='w-full h-[140px]  flex flex-wrap'>
+
+                        <div className='w-full h-1/2 flex flex-wrap px-[20px]'>
+                            <h2 className='w-[40%] h-full flex items-center px-[20px] text-[22px] text-[#00e878] font-montseratb '>Title:</h2>
+                            <h2 className='w-[40%] h-full flex items-center px-[20px] text-[22px] text-[#00e878] font-montseratb '>Description:</h2>
+                        </div>
+
+
+                        <div className='w-full h-1/2 flex flex-wrap px-[20px] '>
+                            <div className='w-[40%] h-full flex items-center justify-center px-[20px] '>
+                                <input placeholder='Enter your todo title' className='w-full h-[65%] outline-[#00e878]  ps-[15px] font-montseratl' type="text" value={inputs.title} name='Title' onChange={(event) => inputvalueset(event)} />
+                            </div>
+                            <div className='w-[40%] h-full flex items-center justify-center px-[20px] '>
+                                <input placeholder='Enter your todo description' className='w-full h-[65%] outline-[#00e878]  ps-[15px] font-montseratl' type="text" value={inputs.description} name='Description' onChange={(event) => inputvalueset(event)} />
+                            </div>
+                            <div className='w-[20%] h-full flex items-center justify-center '>
+                                <button onClick={addtask} className='w-fit h-fit px-[25px] py-[10px] bg-[#00e878] font-montseratl text-white'>Add</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='w-full h-fit flex flex-wrap px-[40px]'>
+                        <div className='w-full h-[30px] flex items-center justify-center'>
+                            <span className='w-full h-[2px] bg-gray-400'></span>
+                        </div>
+                        <div className='w-full h-fit  flex flex-wrap'>
+                            <button data-tabname='list' onClick={changetab} className='w-fit h-fit font-montseratm text-[20px[ text-white bg-[#00e878] px-[20px] py-[15px]'>To Do</button>
+                            <button data-tabname='completed' onClick={changetab} className='w-fit h-fit font-montseratm text-[20px[ text-white bg-[#5e5b5d] px-[20px] py-[15px]'>Completed</button>
+                        </div>
+                        <div ref={list} className='w-full h-fit py-[10px] flex flex-wrap'>
+                            {todos && todos.map((val, i) => {
+                                return (
+                                    <div key={i} data-index={i} className='w-full   flex flex-wrap animate-myAnim bg-[#404040] [box-shadow:-5px_5px_10px_0px_black] px-[25px] my-[10px]'>
+                                        <div className='w-[70%] h-fit flex flex-wrap '>
+                                            <h3 className='w-full h-fit break-all flex text-[#00e878] font-montseratb text-[35px] py-[10px] capitalize '>{val.title}:</h3>
+                                            <p className='w-full h-fit break-all flex font-montseratl text-[17px] text-gray-400 py-[10px] '>{val.description}</p>
+                                        </div>
+                                        <div className='w-[30%] h-full flex items-center justify-end '>
+                                            <span onClick={handledelete} className='w-fit h-fit text-white hover:text-red-500  cursor-pointer px-[20px] py-[10px] text-[28px]'><GoTrash /></span>
+                                            <span onClick={handlecomplete} className='w-fit h-fit text-[#00e878] hover:text-[#218f5a]  cursor-pointer px-[20px] py-[10px] text-[28px]'><FaCheck /></span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div ref={completedtab} className='w-full h-fit py-[10px] hidden flex-wrap'>
+                            {completedtodos && completedtodos.map((val, i) => {
+                                return (
+                                    <div key={i} data-index={i} className='w-full  flex flex-wrap animate-myAnim bg-[#404040] [box-shadow:-5px_5px_10px_0px_black] px-[25px] my-[10px]'>
+                                        <div className='w-[70%] h-fit flex flex-wrap '>
+                                            <h3 className='w-full h-fit break-all flex text-[#00e878] font-montseratb text-[35px] py-[5px] capitalize '>{val.title}:</h3>
+                                            <p className='w-full h-fit break-all flex font-montseratl text-[17px] text-gray-400 py-[10px] '>{val.description}</p>
+                                            <div className='w-full h-fit break-all flex font-montseratm text-[14px] text-gray-400 text-14px py-[5px] '>
+                                                completed date: {val.completedOn}
+                                            </div>
+                                        </div>
+                                        <div className='w-[30%] h-full flex items-center justify-end'>
+                                            <span onClick={handlecompleteddelete} className='w-fit h-fit text-white hover:text-red-500  cursor-pointer px-[20px] py-[10px] text-[28px]'><GoTrash /></span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </>
+    )
+}
+
+
+
+export default Todo
